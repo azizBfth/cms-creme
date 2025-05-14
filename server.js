@@ -4,6 +4,10 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 
+const https = require("https");
+const fs = require("fs");
+const http = require("http");
+
 const cremeRoutes = require("./routes/CremeRoutes");
 
 const app = express();
@@ -34,9 +38,22 @@ mongoose
 
     // Démarrer le serveur HTTP
     const PORT =  80;
-    const server = app.listen(PORT, () => {
-      console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-    });
+ http.createServer((req, res) => {
+  const host = req.headers.host.replace(/:\d+$/, ''); // remove port if any
+  res.writeHead(301, { "Location": `https://${host}${req.url}` });
+  res.end();
+}).listen(80, () => {
+  console.log("🌐 HTTP server listening on port 80 (redirecting to HTTPS)");
+});
+   const httpsOptions = {
+  key: fs.readFileSync(path.join(__dirname, "certs", "key.pem")),
+  cert: fs.readFileSync(path.join(__dirname, "certs", "cert.pem")),
+};
+
+// 🚀 Start HTTPS server
+https.createServer(httpsOptions, app).listen(443, () => {
+  console.log("🚀 Serveur HTTPS démarré sur le port 443");
+});
 
   })
   .catch((error) => {
